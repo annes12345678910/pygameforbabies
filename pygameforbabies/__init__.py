@@ -1,9 +1,12 @@
 import pygame
+import pygame.camera
 try:
     from . import window,connect,keys,log
 except:
     import window,connect,keys,log
+log.info(f"Backends: {pygame.camera.get_backends()}")
 pygame.init()
+pygame.camera.init()
 print("PYGAME_INIT")
 _quit = True
 sprites = []
@@ -14,6 +17,20 @@ circles = []
 running = True
 camerapos = [0,0]
 screen = None
+camallowed = True
+cams = pygame.camera.list_cameras()
+log.info(f"Cameras: {cams}")
+if not cams:
+    log.error("Attach a camera to your device")
+    camallowed = False
+webcamsize = (640,480)
+webcam = pygame.camera.Camera(cams[0])
+def takepicturetofile(path="photo.jpg"):
+    if camallowed:
+        webcam.start()
+        pygame.time.wait(1000)  # 1 second delay
+        pygame.image.save(webcam.get_image(), path)
+        webcam.stop()
 def getmousepos():
     return (pygame.mouse.get_pos()[0] + camerapos[0], pygame.mouse.get_pos()[1] + camerapos[1])
 def changemusic(path):
@@ -131,6 +148,7 @@ def mainloop():
     mousedown = False
     key = None
     clock = pygame.time.Clock()
+    #takepicturetofile()
     while running:
         for event in pygame.event.get():
             connect.onupdate(event)
