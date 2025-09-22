@@ -14,7 +14,7 @@ oils = []
 score = 0
 st = pfb.Text(f"Score: 0")
 st.add()
-def update(event):
+def update():
     global score
     if random.randint(1,10) == 1:
         plank = pfb.Sprite("plankton.png", [random.randint(0, 800), 0])

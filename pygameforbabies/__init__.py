@@ -20,6 +20,11 @@ screen = None
 camallowed = True
 cams = pygame.camera.list_cameras()
 log.info(f"Cameras: {cams}")
+def hidemouse():
+    pygame.mouse.set_visible(False)
+def showmouse():
+    pygame.mouse.set_visible(True)
+mouselocked = False
 if not cams:
     log.error("Attach a camera to your device")
     camallowed = False
@@ -148,10 +153,11 @@ def mainloop():
     mousedown = False
     key = None
     clock = pygame.time.Clock()
-    #takepicturetofile()
     while running:
+        if mouselocked:
+            pygame.mouse.set_pos((window.size[0] / 2, window.size[1] / 2))
+        connect.onupdate()
         for event in pygame.event.get():
-            connect.onupdate(event)
             if event.type == pygame.KEYDOWN:
                 connect.onkeypress(event.key)
                 keydown = True
