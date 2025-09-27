@@ -1,9 +1,9 @@
 import pygame
 import pygame.camera
 try:
-    from . import window,connect,keys,log
+    from . import window,connect,keys,log,mouses
 except:
-    import window,connect,keys,log
+    import window,connect,keys,log,mouses
 log.info(f"Backends: {pygame.camera.get_backends()}")
 pygame.init()
 pygame.camera.init()
@@ -24,6 +24,11 @@ def hidemouse():
     pygame.mouse.set_visible(False)
 def showmouse():
     pygame.mouse.set_visible(True)
+def setmouse(mouse, system = False):
+    if not system:
+        pygame.mouse.set_cursor(mouse)
+    else:
+        pygame.mouse.set_system_cursor(mouse)
 mouselocked = False
 if not cams:
     log.error("Attach a camera to your device")
@@ -216,6 +221,7 @@ if __name__ == "__main__":
     rea = Rectangle()
     rea.add()
     Text(color="blue").add()
+    setmouse(mouses.RESIZEALL, True)
     def _meow(k):
         if k == pygame.K_w:
             camerapos[1] -= 3
