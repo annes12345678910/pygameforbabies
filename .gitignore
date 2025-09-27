@@ -1,0 +1,4 @@
+# We don't want any build shit here!
+dist/*
+pygameforbabies.egg-info/*
+pygameforbabies/__pycache__/*
