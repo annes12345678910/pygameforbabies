@@ -1,2 +1,4 @@
+rm -rf dist
+rm -rf pygameforbabies.egg-info
 python -m build
 python -m twine upload dist/*

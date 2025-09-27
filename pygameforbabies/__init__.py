@@ -154,9 +154,7 @@ def mainloop():
     screen = pygame.display.set_mode(window.size, pygame.RESIZABLE if window.resizeable else 0)
     pygame.display.set_caption(window.title)
     pygame.display.set_icon(window.icon)
-    keydown = False
     mousedown = False
-    key = None
     clock = pygame.time.Clock()
     while running:
         if mouselocked:
@@ -165,24 +163,24 @@ def mainloop():
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 connect.onkeypress(event.key)
-                keydown = True
-                key = event.key
             if event.type == pygame.KEYUP:
-                keydown = False
+                connect.onkeyup(event.key)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 connect.onmouseclicked((pygame.mouse.get_pos()[0] + camerapos[0], pygame.mouse.get_pos()[1] + camerapos[1]))
                 mousedown = True
             if event.type == pygame.MOUSEBUTTONUP:
                 mousedown = False
             if event.type == pygame.MOUSEMOTION:
-                connect.onmousemove(event.pos)
+                connect.onmousemove((pygame.mouse.get_pos()[0] + camerapos[0], pygame.mouse.get_pos()[1] + camerapos[1]))
             if event.type == pygame.QUIT:
                 if _quit:
                     running = False
+                    connect.onquit()
+            connect.oneventupdate(event)
         if mousedown:
             connect.onmousedown((pygame.mouse.get_pos()[0] + camerapos[0], pygame.mouse.get_pos()[1] + camerapos[1]))
-        if keydown:
-            connect.onkeydown(key)
+        kes = pygame.key.get_pressed()
+        connect.onkeydown(kes)
         screen.fill(window.screencolor)
         for sp in sprites:
             if sp.camaffect:
@@ -223,13 +221,13 @@ if __name__ == "__main__":
     Text(color="blue").add()
     setmouse(mouses.RESIZEALL, True)
     def _meow(k):
-        if k == pygame.K_w:
+        if k[keys.W]:
             camerapos[1] -= 3
-        if k == pygame.K_a:
+        if k[keys.A]:
             camerapos[0] -= 3
-        if k == pygame.K_s:
+        if k[keys.S]:
             camerapos[1] += 3
-        if k == pygame.K_d:
+        if k[keys.D]:
             camerapos[0] += 3
         
     connect.onkeydown = _meow
