@@ -14,6 +14,7 @@ lines = []
 rects = []
 texts = []
 circles = []
+drawqueue = []
 running = True
 
 camerapos = [0,0]
@@ -68,7 +69,7 @@ class Sound(pygame.mixer.Sound):
 
 # sprite
 class Sprite:
-    def __init__(self,imgpath,pos=[0,0],scale = [64,64], camaffect=True, rotation = 0):
+    def __init__(self,imgpath,pos=[0,0],scale = [64,64], camaffect=True, rotation = 0,removecolor=None):
         self.image = _loadimage(imgpath)
         self.children = []
         self.pos = pos
@@ -77,8 +78,9 @@ class Sprite:
         self.camaffect = camaffect
         self.update = connect._defaultfunc
         self.visible = True if self.image else False
+        self.removecolor = removecolor
     def add(self):
-        sprites.append(self)
+        drawqueue.append(self)
     def changeimg(self,path):
         self.image = _loadimage(path)
         self.visible = True if self.image else False
@@ -96,10 +98,30 @@ class Sprite:
         self.rotation += angle
     def _draw(self, screen:pygame.Surface):
         if self.visible:
-            screen.blit(pygame.transform.rotate(pygame.transform.scale(self.image, (abs(self.scale[0] * camerazoom), abs(self.scale[1] * camerazoom))), self.rotation), ((self.pos[0] - camerapos[0]) * camerazoom, (self.pos[1] - camerapos[1]) * camerazoom)) # type: ignore
+            screen.blit(
+                pygame.transform.rotate(
+                    pygame.transform.scale(
+                        self.image,  # type: ignore
+                        (abs(self.scale[0] * camerazoom), abs(self.scale[1] * camerazoom))
+                    ), 
+                    self.rotation
+                ), 
+                (
+                    (self.pos[0] - camerapos[0]) * camerazoom,
+                    (self.pos[1] - camerapos[1]) * camerazoom
+                )
+            )
     def _drawab(self, screen:pygame.Surface):
         if self.visible:
-            screen.blit(pygame.transform.rotate(pygame.transform.scale(self.image, self.scale), self.rotation), self.pos) # type: ignore
+            screen.blit(
+                pygame.transform.rotate(
+                    pygame.transform.scale(
+                        self.image, self.scale # type: ignore
+                    ), 
+                    self.rotation
+                ), 
+                self.pos
+            )
 class Line:
     def __init__(self, p1=(0,0), p2=(0,20), color="red", camaffect=True, width=4,visible=True):
         self.p1 = p1
@@ -109,13 +131,31 @@ class Line:
         self.width = width
         self.visible = visible
     def add(self):
-        lines.append(self)
+        drawqueue.append(self)
     def _draw(self,screen):
         if self.visible:
-            pygame.draw.line(screen, self.color, (self.p1[0] - camerapos[0], self.p1[1] - camerapos[1]), (self.p2[0] - camerapos[0], self.p2[1] - camerapos[1]), self.width)
+            pygame.draw.line(
+                screen, 
+                self.color, 
+                (
+                    (self.p1[0] - camerapos[0]) * camerazoom, 
+                    (self.p1[1] - camerapos[1]) * camerazoom
+                ), 
+                (
+                    (self.p2[0] - camerapos[0]) * camerazoom, 
+                    (self.p2[1] - camerapos[1]) * camerazoom
+                ), 
+                self.width
+            )
     def _drawab(self,screen):
         if self.visible:
-            pygame.draw.line(screen, self.color, self.p1, self.p2, self.width)
+            pygame.draw.line(
+                screen, 
+                self.color, 
+                self.p1, 
+                self.p2, 
+                self.width
+            )
 class Rectangle:
     def __init__(self, pos=[0,0],size=[20,20],color='red',camaffect=True, draw=True,visible=True):
         self.rect = pygame.Rect(pos[0], pos[1], size[0], size[1])
@@ -124,12 +164,21 @@ class Rectangle:
         self.draw = draw
         self.visible = visible
     def add(self):
-        rects.append(self)
+        drawqueue.append(self)
     def _draw(self, screen):
         # Create a new pygame.Rect object with the adjusted position
         if self.visible:
-            adjusted_rect = pygame.Rect(self.rect.x - camerapos[0], self.rect.y - camerapos[1], self.rect.width, self.rect.height)
-            pygame.draw.rect(screen, self.color, adjusted_rect)
+            adjusted_rect = pygame.Rect(
+                (self.rect.x - camerapos[0]) * camerazoom,
+                (self.rect.y - camerapos[1]) * camerazoom,
+                abs(self.rect.width * camerazoom),
+                abs(self.rect.height * camerazoom)
+            )
+            pygame.draw.rect(
+                screen, 
+                self.color, 
+                adjusted_rect
+            )
     def _drawab(self,screen):
         if self.visible:
             pygame.draw.rect(screen, self.color, self.rect)
@@ -145,7 +194,7 @@ class Text:
         self.camaffect = camaffect
         self.visible = visible
     def add(self):
-        texts.append(self)
+        drawqueue.append(self)
     def _draw(self,screen):
         if self.visible:
             meow = self.font.render(self.text,False,self.color)
@@ -165,10 +214,18 @@ class Circle:
         self.camaffect = camaffect
         self.visible = visible
     def add(self):
-        circles.append(self)
+        drawqueue.append(self)
     def _draw(self,screen):
         if self.visible:
-            pygame.draw.circle(screen, self.color, (self.pos[0] - camerapos[0], self.pos[1] - camerapos[1]), self.radius)
+            pygame.draw.circle(
+                screen, 
+                self.color, 
+                (
+                    (self.pos[0] - camerapos[0]) * camerazoom, 
+                    (self.pos[1] - camerapos[1]) * camerazoom
+                ), 
+                abs(self.radius * camerazoom)
+            )
     def _drawab(self,screen):
         if self.visible:
             pygame.draw.circle(screen,self.color,self.pos,self.radius)
@@ -209,47 +266,27 @@ def mainloop():
         kes = pygame.key.get_pressed()
         connect.onkeydown(kes)
         screen.fill(window.screencolor)
-        for sp in sprites:
-            if sp.camaffect:
-                sp._draw(screen)
+        for item in drawqueue:
+            if item.camaffect:
+                item._draw(screen)
             else:
-                sp._drawab(screen)
-            sp.update(event)
-        for sp in lines:
-            if sp.camaffect:
-                sp._draw(screen)
-            else:
-                sp._drawab(screen)
-        for sp in rects:
-            if sp.draw:
-                if sp.camaffect:
-                    sp._draw(screen)
-                else:
-                    sp._drawab(screen)
-        for sp in texts:
-            if sp.camaffect:
-                sp._draw(screen)
-            else:
-                sp._drawab(screen)
-        for sp in circles:
-            if sp.camaffect:
-                sp._draw(screen)
-            else:
-                sp._drawab(screen)
+                item._drawab(screen)
         pygame.display.flip()
         clock.tick(window.fps)
 
 # test
 if __name__ == "__main__":
-    meow = Sprite("baby.jpeg",[0,0],(290,290), rotation=45)
-    meow.add()
-    e = Line(width=4, camaffect=False)
+    e = Line(width=4, camaffect=True)
     e.add()
     rea = Rectangle()
     rea.add()
+    meow = Sprite("baby.jpeg",[0,0],(290,290), rotation=45)
+    meow.add()
+    Circle([100,100]).add()
     Text(color="blue").add()
     setmouse(mouses.HANDPOINT, False)
     def _meow(k):
+        meow.rotate(1)
         if k[keys.W]:
             camerapos[1] -= 3
             meow.changeimg("fish.png")
