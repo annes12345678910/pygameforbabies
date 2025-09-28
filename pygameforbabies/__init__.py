@@ -1,6 +1,6 @@
 import pygame
 import pygame.camera
-try:
+try: # stiching
     from . import window,connect,keys,log,mouses
 except:
     import window,connect,keys,log,mouses
@@ -15,7 +15,10 @@ rects = []
 texts = []
 circles = []
 running = True
+
 camerapos = [0,0]
+camerazoom = 1.0
+
 screen = None
 camallowed = True
 cams = pygame.camera.list_cameras()
@@ -58,8 +61,12 @@ def _loadimage(path):
     except Exception as e:
         log.error(f"Could not load {path}: {e}")
         return None
+
+# im lazy
 class Sound(pygame.mixer.Sound):
     pass
+
+# sprite
 class Sprite:
     def __init__(self,imgpath,pos=[0,0],scale = [64,64], camaffect=True, rotation = 0):
         self.image = _loadimage(imgpath)
@@ -69,16 +76,17 @@ class Sprite:
         self.rotation = rotation
         self.camaffect = camaffect
         self.update = connect._defaultfunc
-        self.success = True if self.image else False
+        self.visible = True if self.image else False
     def add(self):
         sprites.append(self)
-    #def destroy(self):
-    #   sprites.remove(self)
+    def changeimg(self,path):
+        self.image = _loadimage(path)
+        self.visible = True if self.image else False
     def move(self,dx,dy):
         self.pos[0] += dx
         self.pos[1] += dy
     def iscolliding(self,other):
-        if self.success:
+        if self.visible:
             meow1 = pygame.transform.scale(self.image, self.scale).get_rect() # type: ignore
             meow1.topleft = self.pos
             meow2 = pygame.transform.scale(other.image, other.scale).get_rect()
@@ -87,71 +95,88 @@ class Sprite:
     def rotate(self, angle):
         self.rotation += angle
     def _draw(self, screen:pygame.Surface):
-        if self.success:
-            screen.blit(pygame.transform.rotate(pygame.transform.scale(self.image, self.scale), self.rotation), (self.pos[0] - camerapos[0], self.pos[1] - camerapos[1])) # type: ignore
+        if self.visible:
+            screen.blit(pygame.transform.rotate(pygame.transform.scale(self.image, (abs(self.scale[0] * camerazoom), abs(self.scale[1] * camerazoom))), self.rotation), ((self.pos[0] - camerapos[0]) * camerazoom, (self.pos[1] - camerapos[1]) * camerazoom)) # type: ignore
     def _drawab(self, screen:pygame.Surface):
-        if self.success:
+        if self.visible:
             screen.blit(pygame.transform.rotate(pygame.transform.scale(self.image, self.scale), self.rotation), self.pos) # type: ignore
 class Line:
-    def __init__(self, p1=(0,0), p2=(0,20), color="red", camaffect=True, width=4):
+    def __init__(self, p1=(0,0), p2=(0,20), color="red", camaffect=True, width=4,visible=True):
         self.p1 = p1
         self.p2 = p2
         self.color = color
         self.camaffect = camaffect
         self.width = width
+        self.visible = visible
     def add(self):
         lines.append(self)
     def _draw(self,screen):
-        pygame.draw.line(screen, self.color, (self.p1[0] - camerapos[0], self.p1[1] - camerapos[1]), (self.p2[0] - camerapos[0], self.p2[1] - camerapos[1]), self.width)
+        if self.visible:
+            pygame.draw.line(screen, self.color, (self.p1[0] - camerapos[0], self.p1[1] - camerapos[1]), (self.p2[0] - camerapos[0], self.p2[1] - camerapos[1]), self.width)
     def _drawab(self,screen):
-        pygame.draw.line(screen, self.color, self.p1, self.p2, self.width)
+        if self.visible:
+            pygame.draw.line(screen, self.color, self.p1, self.p2, self.width)
 class Rectangle:
-    def __init__(self, pos=[0,0],size=[20,20],color='red',camaffect=True, draw=True):
+    def __init__(self, pos=[0,0],size=[20,20],color='red',camaffect=True, draw=True,visible=True):
         self.rect = pygame.Rect(pos[0], pos[1], size[0], size[1])
         self.color = color
         self.camaffect=camaffect
         self.draw = draw
+        self.visible = visible
     def add(self):
         rects.append(self)
     def _draw(self, screen):
         # Create a new pygame.Rect object with the adjusted position
-        adjusted_rect = pygame.Rect(self.rect.x - camerapos[0], self.rect.y - camerapos[1], self.rect.width, self.rect.height)
-        pygame.draw.rect(screen, self.color, adjusted_rect)
+        if self.visible:
+            adjusted_rect = pygame.Rect(self.rect.x - camerapos[0], self.rect.y - camerapos[1], self.rect.width, self.rect.height)
+            pygame.draw.rect(screen, self.color, adjusted_rect)
     def _drawab(self,screen):
-        pygame.draw.rect(screen, self.color, self.rect)
+        if self.visible:
+            pygame.draw.rect(screen, self.color, self.rect)
+
+# text
 class Text:
-    def __init__(self, text="MEoooow",pos=[0,0], size=20, color="red",camaffect=True):
+    def __init__(self, text="MEoooow",pos=[0,0], size=20, color="red",camaffect=True,visible=True):
         self.pos = pos
         self.size = size
         self.color = color
         self.font = pygame.font.Font(None, self.size)
         self.text = text
         self.camaffect = camaffect
+        self.visible = visible
     def add(self):
         texts.append(self)
     def _draw(self,screen):
-        meow = self.font.render(self.text,False,self.color)
-        screen.blit(meow, (self.pos[0] - camerapos[0], self.pos[1] - camerapos[1]))
+        if self.visible:
+            meow = self.font.render(self.text,False,self.color)
+            screen.blit(meow, (self.pos[0] - camerapos[0], self.pos[1] - camerapos[1]))
     def _drawab(self,screen):
-        meow = self.font.render(self.text,False,self.color)
-        screen.blit(meow, self.pos)
+        if self.visible:
+            meow = self.font.render(self.text,False,self.color)
+            screen.blit(meow, self.pos)
+
+# circle
 class Circle:
-    def __init__(self,pos=[0,0], color="red", radius=10, camaffect=True) -> None:
+    def __init__(self,pos=[0,0], color="red", radius=10, camaffect=True,visible=True) -> None:
         #pygame.draw.circle(screen,"blue",(0,0),10)
         self.pos = pos
         self.color = color
         self.radius = radius
         self.camaffect = camaffect
+        self.visible = visible
     def add(self):
         circles.append(self)
     def _draw(self,screen):
-        pygame.draw.circle(screen, self.color, (self.pos[0] - camerapos[0], self.pos[1] - camerapos[1]), self.radius)
+        if self.visible:
+            pygame.draw.circle(screen, self.color, (self.pos[0] - camerapos[0], self.pos[1] - camerapos[1]), self.radius)
     def _drawab(self,screen):
-        pygame.draw.circle(screen,self.color,self.pos,self.radius)
+        if self.visible:
+            pygame.draw.circle(screen,self.color,self.pos,self.radius)
 
+#   IMPORTANT
 def mainloop():
     global running,screen
-    screen = pygame.display.set_mode(window.size, pygame.RESIZABLE if window.resizeable else 0)
+    screen = pygame.display.set_mode(window.size, pygame.RESIZABLE if window.resizeable else 0 or pygame.FULLSCREEN if window.fullscreen else 0)
     pygame.display.set_caption(window.title)
     pygame.display.set_icon(window.icon)
     mousedown = False
@@ -172,6 +197,8 @@ def mainloop():
                 mousedown = False
             if event.type == pygame.MOUSEMOTION:
                 connect.onmousemove((pygame.mouse.get_pos()[0] + camerapos[0], pygame.mouse.get_pos()[1] + camerapos[1]))
+            if event.type == pygame.MOUSEWHEEL:
+                connect.onmousescroll((event.x,event.y))
             if event.type == pygame.QUIT:
                 if _quit:
                     running = False
@@ -211,6 +238,8 @@ def mainloop():
                 sp._drawab(screen)
         pygame.display.flip()
         clock.tick(window.fps)
+
+# test
 if __name__ == "__main__":
     meow = Sprite("baby.jpeg",[0,0],(290,290), rotation=45)
     meow.add()
@@ -219,16 +248,21 @@ if __name__ == "__main__":
     rea = Rectangle()
     rea.add()
     Text(color="blue").add()
-    setmouse(mouses.RESIZEALL, True)
+    setmouse(mouses.HANDPOINT, False)
     def _meow(k):
         if k[keys.W]:
             camerapos[1] -= 3
+            meow.changeimg("fish.png")
         if k[keys.A]:
             camerapos[0] -= 3
         if k[keys.S]:
             camerapos[1] += 3
         if k[keys.D]:
             camerapos[0] += 3
+    def _meow2(scroll):
+        global camerazoom
+        camerazoom -= (scroll[1] * 0.1)
         
     connect.onkeydown = _meow
+    connect.onmousescroll = _meow2
     mainloop()

@@ -2,3 +2,4 @@
 dist/*
 pygameforbabies.egg-info/*
 pygameforbabies/__pycache__/*
+.DS_Store

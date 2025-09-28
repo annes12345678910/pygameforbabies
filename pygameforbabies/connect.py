@@ -11,5 +11,6 @@ onkeyup = _defaultfunc
 onmouseclicked = _defaultfunc
 onmousedown = _defaultfunc
 onmousemove = _defaultfunc
+onmousescroll = _defaultfunc
 
 onquit = _defaultfunc
