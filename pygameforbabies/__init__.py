@@ -198,7 +198,16 @@ class Text:
     def _draw(self,screen):
         if self.visible:
             meow = self.font.render(self.text,False,self.color)
-            screen.blit(meow, (self.pos[0] - camerapos[0], self.pos[1] - camerapos[1]))
+            screen.blit(
+                pygame.transform.scale(
+                    meow,  # type: ignore
+                    (abs(meow.get_width() * camerazoom), abs(meow.get_height() * camerazoom))
+                ), 
+                (
+                    self.pos[0] - camerapos[0], 
+                    self.pos[1] - camerapos[1]
+                )
+            )
     def _drawab(self,screen):
         if self.visible:
             meow = self.font.render(self.text,False,self.color)
@@ -278,7 +287,7 @@ def mainloop():
 if __name__ == "__main__":
     e = Line(width=4, camaffect=True)
     e.add()
-    rea = Rectangle()
+    rea = Rectangle(camaffect=False)
     rea.add()
     meow = Sprite("baby.jpeg",[0,0],(290,290), rotation=45)
     meow.add()
