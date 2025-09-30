@@ -1,5 +1,6 @@
 import pygame
 import pygame.camera
+import math
 try: # stiching
     from . import window,connect,keys,log,mouses
 except:
@@ -15,11 +16,11 @@ rects = []
 texts = []
 circles = []
 drawqueue = []
+updatequeue = []
 running = True
 
 camerapos = [0,0]
 camerazoom = 1.0
-
 screen = None
 camallowed = True
 cams = pygame.camera.list_cameras()
@@ -157,11 +158,10 @@ class Line:
                 self.width
             )
 class Rectangle:
-    def __init__(self, pos=[0,0],size=[20,20],color='red',camaffect=True, draw=True,visible=True):
+    def __init__(self, pos=[0,0],size=[20,20],color='red',camaffect=True, visible=True):
         self.rect = pygame.Rect(pos[0], pos[1], size[0], size[1])
         self.color = color
         self.camaffect=camaffect
-        self.draw = draw
         self.visible = visible
     def add(self):
         drawqueue.append(self)
@@ -238,7 +238,29 @@ class Circle:
     def _drawab(self,screen):
         if self.visible:
             pygame.draw.circle(screen,self.color,self.pos,self.radius)
-
+class Button:
+    def __init__(self, size=50, text="Mrow?", color="blue", hovercolor="red", pos=[0,0], textcolor="white", camaffect=False, onclick=lambda: print("clicked")) -> None:
+        self.text = Text(text,pos,size,textcolor,camaffect,True)
+        m = self.text.font.render(text,True, "white")
+        self.hovercolor = hovercolor
+        self.color = color
+        self.rect = Rectangle([pos[0] - 10, pos[1] - 10], [m.get_width() + 10, m.get_height() + 10], color, camaffect, True)
+        self.onclick = onclick
+    def add(self):
+        self.rect.add()
+        self.text.add()
+        updatequeue.append(self)
+    def _update(self,event):
+        if self.rect.rect.collidepoint(pygame.mouse.get_pos()):
+            self.rect.color = self.hovercolor
+            setmouse(mouses.HANDPOINT)
+        else:
+            self.rect.color = self.color
+            setmouse(mouses.NORMAL)
+        
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.rect.collidepoint(event.pos):
+                self.onclick()
 #   IMPORTANT
 def mainloop():
     global running,screen
@@ -269,6 +291,8 @@ def mainloop():
                 if _quit:
                     running = False
                     connect.onquit()
+            for item in updatequeue:
+                item._update(event)
             connect.oneventupdate(event)
         if mousedown:
             connect.onmousedown((pygame.mouse.get_pos()[0] + camerapos[0], pygame.mouse.get_pos()[1] + camerapos[1]))
@@ -282,29 +306,51 @@ def mainloop():
                 item._drawab(screen)
         pygame.display.flip()
         clock.tick(window.fps)
+def calculate_sprite_distance(sp1:Sprite, sp2:Sprite):
+    """
+    Calculates the Euclidean distance between the centers of two Sprite objects.
+    """
+    meow1 = pygame.transform.scale(sp1.image, sp1.scale).get_rect() # type: ignore
+    meow2 = pygame.transform.scale(sp2.image, sp2.scale).get_rect() # type: ignore
+    center1_x, center1_y = meow1.center
+    center2_x, center2_y = meow2.center
 
+    dx = center1_x - center2_x
+    dy = center1_y - center2_y
+
+    distance = math.hypot(dx, dy)
+    return distance
 # test
 if __name__ == "__main__":
-    e = Line(width=4, camaffect=True)
-    e.add()
     rea = Rectangle(camaffect=False)
     rea.add()
     meow = Sprite("baby.jpeg",[0,0],(290,290), rotation=45)
     meow.add()
+    meow2 = Sprite("oil.png",[0,0],(290,290), rotation=45)
+    meow2.add()
+    butt = Button()
+    butt.add()
     Circle([100,100]).add()
-    Text(color="blue").add()
-    setmouse(mouses.HANDPOINT, False)
+    txt = Text(color="blue", pos=[100,100])
+    txt.add()
+    e = Line(width=4, camaffect=True)
+    e.add()
+    #setmouse(mouses.HANDPOINT, False)
     def _meow(k):
-        meow.rotate(1)
+        global txt,camerapos
+        #meow.rotate(1)
+        camerapos = meow.pos
+        e.p1 = meow.pos
+        e.p2 = meow2.pos
         if k[keys.W]:
-            camerapos[1] -= 3
-            meow.changeimg("fish.png")
+            meow.pos[1] -= 1
+            #meow.changeimg("fish.png")
         if k[keys.A]:
-            camerapos[0] -= 3
+            meow.pos[0] -= 1
         if k[keys.S]:
-            camerapos[1] += 3
+            meow.pos[1] += 1
         if k[keys.D]:
-            camerapos[0] += 3
+            meow.pos[0] += 1
     def _meow2(scroll):
         global camerazoom
         camerazoom -= (scroll[1] * 0.1)
