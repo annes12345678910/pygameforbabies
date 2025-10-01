@@ -177,6 +177,7 @@ class Rectangle:
         self.camaffect=camaffect
         self.visible = visible
         self.scene = scene
+        self.modrect = self.rect
     def add(self):
         drawqueue.append(self)
     def _draw(self, screen):
@@ -186,7 +187,7 @@ class Rectangle:
             self.visible = False
         # Create a new pygame.Rect object with the adjusted position
         if self.visible:
-            adjusted_rect = pygame.Rect(
+            self.modrect = pygame.Rect(
                 (self.rect.x - camerapos[0]) * camerazoom,
                 (self.rect.y - camerapos[1]) * camerazoom,
                 abs(self.rect.width * camerazoom),
@@ -195,7 +196,7 @@ class Rectangle:
             pygame.draw.rect(
                 screen, 
                 self.color, 
-                adjusted_rect
+                self.modrect
             )
     def _drawab(self,screen):
         if scene == self.scene:
@@ -203,7 +204,8 @@ class Rectangle:
         else:
             self.visible = False
         if self.visible:
-            pygame.draw.rect(screen, self.color, self.rect)
+            self.modrect = self.rect
+            pygame.draw.rect(screen, self.color, self.modrect)
 
 # text
 class Text:
@@ -303,7 +305,7 @@ class Button:
         else:
             self.hide()
         if self.rect.visible:
-            if self.rect.rect.collidepoint(pygame.mouse.get_pos()):
+            if self.rect.modrect.collidepoint(pygame.mouse.get_pos()):
                 self.rect.color = self.hovercolor
                 setmouse(mouses.HANDPOINT)
             else:
@@ -311,7 +313,7 @@ class Button:
                 setmouse(mouses.NORMAL)
         
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.rect.rect.collidepoint(event.pos):
+            if self.rect.modrect.collidepoint(event.pos):
                 setmouse(mouses.NORMAL)
                 self.onclick()
     def changetext(self,text):
@@ -397,7 +399,7 @@ if __name__ == "__main__":
     rea.add()
     meow = Sprite("baby.jpeg",[0,0],(290,290), rotation=45)
     meow.add()
-    meow2 = Sprite("oil.png",[0,0],(290,290), rotation=45)
+    meow2 = Sprite("assets/oil.png",[0,0],(290,290), rotation=45)
     meow2.add()
     butt = Button()
     butt.add()
