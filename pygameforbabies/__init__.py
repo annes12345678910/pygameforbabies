@@ -261,6 +261,38 @@ class Button:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.rect.collidepoint(event.pos):
                 self.onclick()
+    def changetext(self,text):
+        self.text.text = text
+        m = self.text.font.render(text,True, "white")
+        self.rect.rect.size = (m.get_width() + 10, m.get_height() + 10)
+class Slider:
+    def __init__(self, pos=[0,0], size=[200,20], color="blue", handlecolor="red", minvalue=0, maxvalue=100, startvalue=50, camaffect=False, onchange=lambda val: print(val)) -> None:
+        self.rect = Rectangle(pos,size,color,camaffect,True)
+        self.handlepos = [pos[0] + (startvalue - minvalue) / (maxvalue - minvalue) * size[0] - 10, pos[1] - 5]
+        self.handle = Rectangle(self.handlepos,[20,size[1]+10],handlecolor,camaffect,True)
+        self.minvalue = minvalue
+        self.maxvalue = maxvalue
+        self.value = startvalue
+        self.dragging = False
+        self.onchange = onchange
+    def add(self):
+        self.rect.add()
+        self.handle.add()
+        updatequeue.append(self)
+    def _update(self,event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.handle.rect.collidepoint(event.pos):
+                self.dragging = True
+        if event.type == pygame.MOUSEBUTTONUP:
+            self.dragging = False
+        if event.type == pygame.MOUSEMOTION:
+            if self.dragging:
+                new_x = event.pos[0]
+                new_x = max(self.rect.rect.x, min(new_x, self.rect.rect.x + self.rect.rect.width))
+                self.handle.rect.x = new_x - 10
+                relative_x = self.handle.rect.x + 10 - self.rect.rect.x
+                self.value = self.minvalue + (relative_x / self.rect.rect.width) * (self.maxvalue - self.minvalue)
+                self.onchange(self.value)
 #   IMPORTANT
 def mainloop():
     global running,screen
@@ -306,20 +338,6 @@ def mainloop():
                 item._drawab(screen)
         pygame.display.flip()
         clock.tick(window.fps)
-def calculate_sprite_distance(sp1:Sprite, sp2:Sprite):
-    """
-    Calculates the Euclidean distance between the centers of two Sprite objects.
-    """
-    meow1 = pygame.transform.scale(sp1.image, sp1.scale).get_rect() # type: ignore
-    meow2 = pygame.transform.scale(sp2.image, sp2.scale).get_rect() # type: ignore
-    center1_x, center1_y = meow1.center
-    center2_x, center2_y = meow2.center
-
-    dx = center1_x - center2_x
-    dy = center1_y - center2_y
-
-    distance = math.hypot(dx, dy)
-    return distance
 # test
 if __name__ == "__main__":
     rea = Rectangle(camaffect=False)
@@ -330,11 +348,18 @@ if __name__ == "__main__":
     meow2.add()
     butt = Button()
     butt.add()
+    butt.changetext("eeiwwwwwww")
+    butt2 = Button(pos=[0,50])
+    butt2.add()
+    butt2.changetext("eeiwwwwwdwadwadwadwaww")
+    butt2.onclick = lambda: print("MKAMDWNDIOANDW")
     Circle([100,100]).add()
     txt = Text(color="blue", pos=[100,100])
     txt.add()
     e = Line(width=4, camaffect=True)
     e.add()
+    slide = Slider(pos=[0,100])
+    slide.add()
     #setmouse(mouses.HANDPOINT, False)
     def _meow(k):
         global txt,camerapos
