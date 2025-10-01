@@ -1,27 +1,27 @@
 import pygameforbabies as pfb
 import random
-pfb.window.changeicon("fish.png")
+pfb.window.changeicon("assets/fish.png")
 pfb.window.title = "fish game"
 pfb.window.screencolor = "blue"
-eat = pfb.Sound("eat.mp3")
-fish = pfb.Sprite("fish.png")
+eat = pfb.Sound("assets/eat.mp3")
+fish = pfb.Sprite("assets/fish.png")
 fish.add()
 fish.pos[1] = 536
 def mousemove(pos):
-    fish.pos[0] = pos[0]
+    fish.pos[0] = pos[0] - 32
 planks = []
 oils = []
 score = 0
-st = pfb.Text(f"Score: 0")
+st = pfb.Text(f"Score: 0", size=50)
 st.add()
 def update():
     global score
     if random.randint(1,10) == 1:
-        plank = pfb.Sprite("plankton.png", [random.randint(0, 800), 0])
+        plank = pfb.Sprite("assets/plankton.png", [random.randint(0, 800), 0])
         plank.add()
         planks.append(plank)
-    if random.randint(1,20) == 1:
-        oil = pfb.Sprite("oil.png", [random.randint(0, 800), 0])
+    if random.randint(1,30) == 1:
+        oil = pfb.Sprite("assets/oil.png", [random.randint(0, 800), 0])
         oil.add()
         oils.append(oil)
     for i in planks:

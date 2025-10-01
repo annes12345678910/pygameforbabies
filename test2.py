@@ -5,7 +5,7 @@ pfb.window.title = "paint"
 pfb.window.resizeable = True
 clr = "red"
 pfb.Text("press g to screenshot and c to change color", [0,0], 50, "white",False).add()
-pfb.changemusic("sample.mp3")
+pfb.changemusic("assets/sample.mp3")
 def _meow(k):
         if k[keys.W]:
             pfb.camerapos[1] -= 3

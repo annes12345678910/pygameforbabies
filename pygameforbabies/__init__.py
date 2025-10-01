@@ -10,15 +10,10 @@ pygame.init()
 pygame.camera.init()
 print("PYGAME_INIT")
 _quit = True
-sprites = []
-lines = []
-rects = []
-texts = []
-circles = []
 drawqueue = []
 updatequeue = []
 running = True
-
+scene = "init"
 camerapos = [0,0]
 camerazoom = 1.0
 screen = None
@@ -70,7 +65,7 @@ class Sound(pygame.mixer.Sound):
 
 # sprite
 class Sprite:
-    def __init__(self,imgpath,pos=[0,0],scale = [64,64], camaffect=True, rotation = 0,removecolor=None):
+    def __init__(self,imgpath,pos=[0,0],scale = [64,64], camaffect=True, rotation = 0,removecolor=None, scene="init"):
         self.image = _loadimage(imgpath)
         self.children = []
         self.pos = pos
@@ -80,6 +75,7 @@ class Sprite:
         self.update = connect._defaultfunc
         self.visible = True if self.image else False
         self.removecolor = removecolor
+        self.scene = scene
     def add(self):
         drawqueue.append(self)
     def changeimg(self,path):
@@ -98,6 +94,10 @@ class Sprite:
     def rotate(self, angle):
         self.rotation += angle
     def _draw(self, screen:pygame.Surface):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             screen.blit(
                 pygame.transform.rotate(
@@ -113,6 +113,10 @@ class Sprite:
                 )
             )
     def _drawab(self, screen:pygame.Surface):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             screen.blit(
                 pygame.transform.rotate(
@@ -124,16 +128,21 @@ class Sprite:
                 self.pos
             )
 class Line:
-    def __init__(self, p1=(0,0), p2=(0,20), color="red", camaffect=True, width=4,visible=True):
+    def __init__(self, p1=(0,0), p2=(0,20), color="red", camaffect=True, width=4,visible=True, scene="init"):
         self.p1 = p1
         self.p2 = p2
         self.color = color
         self.camaffect = camaffect
         self.width = width
         self.visible = visible
+        self.scene = scene
     def add(self):
         drawqueue.append(self)
     def _draw(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             pygame.draw.line(
                 screen, 
@@ -149,6 +158,10 @@ class Line:
                 self.width
             )
     def _drawab(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             pygame.draw.line(
                 screen, 
@@ -158,14 +171,19 @@ class Line:
                 self.width
             )
 class Rectangle:
-    def __init__(self, pos=[0,0],size=[20,20],color='red',camaffect=True, visible=True):
+    def __init__(self, pos=[0,0],size=[20,20],color='red',camaffect=True, visible=True, scene="init"):
         self.rect = pygame.Rect(pos[0], pos[1], size[0], size[1])
         self.color = color
         self.camaffect=camaffect
         self.visible = visible
+        self.scene = scene
     def add(self):
         drawqueue.append(self)
     def _draw(self, screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         # Create a new pygame.Rect object with the adjusted position
         if self.visible:
             adjusted_rect = pygame.Rect(
@@ -180,12 +198,16 @@ class Rectangle:
                 adjusted_rect
             )
     def _drawab(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             pygame.draw.rect(screen, self.color, self.rect)
 
 # text
 class Text:
-    def __init__(self, text="MEoooow",pos=[0,0], size=20, color="red",camaffect=True,visible=True):
+    def __init__(self, text="MEoooow",pos=[0,0], size=20, color="red",camaffect=True,visible=True, scene="init"):
         self.pos = pos
         self.size = size
         self.color = color
@@ -193,9 +215,14 @@ class Text:
         self.text = text
         self.camaffect = camaffect
         self.visible = visible
+        self.scene = scene
     def add(self):
         drawqueue.append(self)
     def _draw(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             meow = self.font.render(self.text,False,self.color)
             screen.blit(
@@ -209,22 +236,31 @@ class Text:
                 )
             )
     def _drawab(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             meow = self.font.render(self.text,False,self.color)
             screen.blit(meow, self.pos)
 
 # circle
 class Circle:
-    def __init__(self,pos=[0,0], color="red", radius=10, camaffect=True,visible=True) -> None:
+    def __init__(self,pos=[0,0], color="red", radius=10, camaffect=True,visible=True, scene="init") -> None:
         #pygame.draw.circle(screen,"blue",(0,0),10)
         self.pos = pos
         self.color = color
         self.radius = radius
         self.camaffect = camaffect
         self.visible = visible
+        self.scene = scene
     def add(self):
         drawqueue.append(self)
     def _draw(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             pygame.draw.circle(
                 screen, 
@@ -236,30 +272,47 @@ class Circle:
                 abs(self.radius * camerazoom)
             )
     def _drawab(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
         if self.visible:
             pygame.draw.circle(screen,self.color,self.pos,self.radius)
 class Button:
-    def __init__(self, size=50, text="Mrow?", color="blue", hovercolor="red", pos=[0,0], textcolor="white", camaffect=False, onclick=lambda: print("clicked")) -> None:
+    def __init__(self, size=50, text="Mrow?", color="blue", hovercolor="red", pos=[0,0], textcolor="white", camaffect=False, onclick=lambda: print("clicked"), scene="init") -> None:
         self.text = Text(text,pos,size,textcolor,camaffect,True)
         m = self.text.font.render(text,True, "white")
         self.hovercolor = hovercolor
         self.color = color
         self.rect = Rectangle([pos[0] - 10, pos[1] - 10], [m.get_width() + 10, m.get_height() + 10], color, camaffect, True)
         self.onclick = onclick
+        self.scene = scene
+    def show(self):
+        self.rect.visible = True
+        self.text.visible = True
+    def hide(self):
+        self.rect.visible = False
+        self.text.visible = False
     def add(self):
         self.rect.add()
         self.text.add()
         updatequeue.append(self)
     def _update(self,event):
-        if self.rect.rect.collidepoint(pygame.mouse.get_pos()):
-            self.rect.color = self.hovercolor
-            setmouse(mouses.HANDPOINT)
+        if scene == self.scene:
+            self.show()
         else:
-            self.rect.color = self.color
-            setmouse(mouses.NORMAL)
+            self.hide()
+        if self.rect.visible:
+            if self.rect.rect.collidepoint(pygame.mouse.get_pos()):
+                self.rect.color = self.hovercolor
+                setmouse(mouses.HANDPOINT)
+            else:
+                self.rect.color = self.color
+                setmouse(mouses.NORMAL)
         
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.rect.collidepoint(event.pos):
+                setmouse(mouses.NORMAL)
                 self.onclick()
     def changetext(self,text):
         self.text.text = text
