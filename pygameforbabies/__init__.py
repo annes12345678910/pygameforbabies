@@ -433,6 +433,16 @@ class StaticBody:
         return math.degrees(self.body.angle)
     def apply_force(self, force, point=(0,0)):
         self.body.apply_force_at_local_point(force, point)
+class StaticCircle(StaticBody):
+    def __init__(self, pos=[0,0], radius=50, angle=0, bodytype=pymunk.Body.STATIC, color="red", scene="init",mass=1) -> None:
+        self.body = pymunk.Body(body_type=bodytype, mass=mass, moment=pymunk.moment_for_circle(mass, 0, radius))
+        self.body.position = pos
+        self.body.angle = math.radians(angle)
+        self.shape = pymunk.Circle(self.body, radius)
+        self.shape.color = pygame.Color(color)
+        self.shape.elasticity = 0.5
+        self.shape.friction = 0.5
+        self.scene = scene
 class RigidBody(StaticBody):
     def __init__(self, pos=[0,0], size=[50,50], angle=0, bodytype=pymunk.Body.DYNAMIC, color="blue", scene="init", mass=1) -> None:
         super().__init__(pos, size, angle, bodytype, color, scene, mass)
