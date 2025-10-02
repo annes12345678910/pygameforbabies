@@ -7,6 +7,8 @@ debugslider = pfb.Slider([0,100],camaffect=True)
 debugslider.add()
 debugslider = pfb.Slider([0,100],camaffect=False)
 debugslider.add()
+txt = pfb.TextInput([0,200], 50, camaffect=True)
+txt.add()
 def wasd(keys):
     if keys[pygame.K_w]:
         pfb.camerapos[1] -= 10

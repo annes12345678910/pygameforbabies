@@ -348,6 +348,63 @@ class Slider:
                 relative_x = self.handle.rect.x + 10 - self.rect.rect.x
                 self.value = self.minvalue + (relative_x / self.rect.rect.width) * (self.maxvalue - self.minvalue)
                 self.onchange(self.value)
+class TextInput:
+    def __init__(self, pos=[0,0], size=20, color="black", bgcolor="white", camaffect=False, scene="init") -> None:
+        self.text = ""
+        self.pos = pos
+        self.size = size
+        self.color = color
+        self.bgcolor = bgcolor
+        self.font = pygame.font.Font(None, self.size)
+        self.camaffect = camaffect
+        self.scene = scene
+        self.active = False
+    def add(self):
+        drawqueue.append(self)
+        updatequeue.append(self)
+    def _draw(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
+        if self.visible:
+            meow = self.font.render(self.text,False,self.color)
+            bgrect = meow.get_rect(topleft=(self.pos[0] - camerapos[0], self.pos[1] - camerapos[1]))
+            bgrect.inflate_ip(10, 10)  # Add some padding
+            pygame.draw.rect(screen, self.bgcolor, bgrect)
+            screen.blit(
+                pygame.transform.scale(
+                    meow,  # type: ignore
+                    (abs(meow.get_width() * camerazoom), abs(meow.get_height() * camerazoom))
+                ), 
+                (
+                    (self.pos[0] - camerapos[0]) * camerazoom,
+                    (self.pos[1] - camerapos[1]) * camerazoom
+                )
+            )
+    def _drawab(self,screen):
+        if scene == self.scene:
+            self.visible = True
+        else:
+            self.visible = False
+        if self.visible:
+            meow = self.font.render(self.text,False,self.color)
+            bgrect = meow.get_rect(topleft=self.pos)
+            bgrect.inflate_ip(10, 10)  # Add some padding
+            pygame.draw.rect(screen, self.bgcolor, bgrect)
+            screen.blit(meow, self.pos)
+    def _update(self,event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # Left mouse button
+                if pygame.Rect(self.pos[0], self.pos[1], 200, self.size + 10).collidepoint(event.pos):
+                    self.active = True
+                else:
+                    self.active = False
+        if event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            else:
+                self.text += event.unicode
 #   IMPORTANT
 def mainloop():
     global running,screen
