@@ -1,4 +1,4 @@
-import pygame
+import pygame,pymunk,pymunk.pygame_util
 import pygame.camera
 import math
 try: # stiching
@@ -9,6 +9,9 @@ log.info(f"Backends: {pygame.camera.get_backends()}")
 pygame.init()
 pygame.camera.init()
 print("PYGAME_INIT")
+space = pymunk.space.Space()
+gravity = (0,900)
+space.gravity = gravity
 _quit = True
 drawqueue = []
 updatequeue = []
@@ -19,6 +22,7 @@ camerazoom = 1.0
 screen = None
 camallowed = True
 cams = pygame.camera.list_cameras()
+physics = True
 log.info(f"Cameras: {cams}")
 def hidemouse():
     pygame.mouse.set_visible(False)
@@ -405,6 +409,35 @@ class TextInput:
                 self.text = self.text[:-1]
             else:
                 self.text += event.unicode
+class StaticBody:
+    def __init__(self, pos=[0,0], size=[50,50], angle=0, bodytype=pymunk.Body.STATIC, color="red", scene="init",mass=1) -> None:
+        self.body = pymunk.Body(body_type=bodytype, mass=mass, moment=pymunk.moment_for_box(mass, size))
+        self.body.position = pos
+        self.body.angle = math.radians(angle)
+        self.shape = pymunk.Poly.create_box(self.body, size)
+        self.shape.color = pygame.Color(color)
+        self.shape.elasticity = 0.5
+        self.shape.friction = 0.5
+        self.scene = scene
+    def add(self):
+        space.add(self.body, self.shape)
+    def remove(self):
+        space.remove(self.body, self.shape)
+    def set_position(self, pos):
+        self.body.position = pos
+    def set_angle(self, angle):
+        self.body.angle = math.radians(angle)
+    def get_position(self):
+        return self.body.position
+    def get_angle(self):
+        return math.degrees(self.body.angle)
+    def apply_force(self, force, point=(0,0)):
+        self.body.apply_force_at_local_point(force, point)
+class RigidBody(StaticBody):
+    def __init__(self, pos=[0,0], size=[50,50], angle=0, bodytype=pymunk.Body.DYNAMIC, color="blue", scene="init", mass=1) -> None:
+        super().__init__(pos, size, angle, bodytype, color, scene, mass)
+
+
 #   IMPORTANT
 def mainloop():
     global running,screen
@@ -413,6 +446,7 @@ def mainloop():
     pygame.display.set_icon(window.icon)
     mousedown = False
     clock = pygame.time.Clock()
+    drawoptions = pymunk.pygame_util.DrawOptions(screen)
     while running:
         if mouselocked:
             pygame.mouse.set_pos((window.size[0] / 2, window.size[1] / 2))
@@ -448,50 +482,8 @@ def mainloop():
                 item._draw(screen)
             else:
                 item._drawab(screen)
+        if physics:
+            space.step(1/60)
+            space.debug_draw(drawoptions)
         pygame.display.flip()
         clock.tick(window.fps)
-# test
-if __name__ == "__main__":
-    rea = Rectangle(camaffect=False)
-    rea.add()
-    meow = Sprite("baby.jpeg",[0,0],(290,290), rotation=45)
-    meow.add()
-    meow2 = Sprite("assets/oil.png",[0,0],(290,290), rotation=45)
-    meow2.add()
-    butt = Button()
-    butt.add()
-    butt.changetext("eeiwwwwwww")
-    butt2 = Button(pos=[0,50])
-    butt2.add()
-    butt2.changetext("eeiwwwwwdwadwadwadwaww")
-    butt2.onclick = lambda: print("MKAMDWNDIOANDW")
-    Circle([100,100]).add()
-    txt = Text(color="blue", pos=[100,100])
-    txt.add()
-    e = Line(width=4, camaffect=True)
-    e.add()
-    slide = Slider(pos=[0,100])
-    slide.add()
-    #setmouse(mouses.HANDPOINT, False)
-    def _meow(k):
-        global txt,camerapos
-        #meow.rotate(1)
-        camerapos = meow.pos
-        e.p1 = meow.pos
-        e.p2 = meow2.pos
-        if k[keys.W]:
-            meow.pos[1] -= 1
-            #meow.changeimg("fish.png")
-        if k[keys.A]:
-            meow.pos[0] -= 1
-        if k[keys.S]:
-            meow.pos[1] += 1
-        if k[keys.D]:
-            meow.pos[0] += 1
-    def _meow2(scroll):
-        global camerazoom
-        camerazoom -= (scroll[1] * 0.1)
-        
-    connect.onkeydown = _meow
-    connect.onmousescroll = _meow2
-    mainloop()

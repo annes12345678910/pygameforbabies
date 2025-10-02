@@ -1,25 +1,9 @@
-import pygame
 import pygameforbabies as pfb
 pfb.window.resizeable = True
-debugbut = pfb.Button(camaffect=True)
-debugbut.add()
-debugslider = pfb.Slider([0,100],camaffect=True)
-debugslider.add()
-debugslider = pfb.Slider([0,100],camaffect=False)
-debugslider.add()
-txt = pfb.TextInput([0,200], 50, camaffect=True)
-txt.add()
-def wasd(keys):
-    if keys[pygame.K_w]:
-        pfb.camerapos[1] -= 10
-    if keys[pygame.K_s]:
-        pfb.camerapos[1] += 10
-    if keys[pygame.K_a]:
-        pfb.camerapos[0] -= 10
-    if keys[pygame.K_d]:
-        pfb.camerapos[0] += 10
-def _meow2(scroll):
-    pfb.camerazoom -= (scroll[1] * 0.1)
-pfb.connect.onmousescroll = _meow2
-pfb.connect.onkeydown = wasd
+pfb.window.title = "Debug Window"
+
+floor = pfb.StaticBody([0, pfb.window.size[1] - 50], [pfb.window.size[0], 50], color="red")
+floor.add()
+mrow = pfb.RigidBody([100,100], color="blue")
+mrow.add()
 pfb.mainloop()
