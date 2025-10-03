@@ -446,7 +446,9 @@ class StaticCircle(StaticBody):
 class RigidBody(StaticBody):
     def __init__(self, pos=[0,0], size=[50,50], angle=0, bodytype=pymunk.Body.DYNAMIC, color="blue", scene="init", mass=1) -> None:
         super().__init__(pos, size, angle, bodytype, color, scene, mass)
-
+class RigidCircle(StaticCircle):
+    def __init__(self, pos=[0, 0], radius=50, angle=0, bodytype=pymunk.Body.DYNAMIC, color="blue", scene="init", mass=1) -> None:
+        super().__init__(pos, radius, angle, bodytype, color, scene, mass)
 
 #   IMPORTANT
 def mainloop():
