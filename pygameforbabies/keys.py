@@ -1,3 +1,5 @@
+"The key constants and inputmaps"
+
 # silly keys
 ESCAPE = 27
 ENTER = 13
@@ -45,3 +47,16 @@ W= 119
 X= 120
 Y= 121
 Z= 122
+
+#input maps
+class InputMap:
+    def __init__(self, inputs:list[int]=[A, D]) -> None:
+        self.inputs = inputs
+    def is_down(self,keys):
+        for i in self.inputs:
+            if keys[i]:
+                return True
+        return False
+
+def get_axis(keys, negative:InputMap, positive:InputMap):
+    return (int(positive.is_down(keys)) - int(negative.is_down(keys)))

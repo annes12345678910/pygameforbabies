@@ -9,6 +9,7 @@ log.info(f"Backends: {pygame.camera.get_backends()}")
 pygame.init()
 pygame.camera.init()
 print("PYGAME_INIT")
+physics_size = [1000,1000]
 space = pymunk.space.Space()
 gravity = (0,900)
 space.gravity = gravity
@@ -23,7 +24,16 @@ screen = None
 camallowed = True
 cams = pygame.camera.list_cameras()
 physics = True
+drawphysics = True
 log.info(f"Cameras: {cams}")
+def additer(iter1, iter2):
+    return [iter1[0] + iter2[0], iter1[1] + iter2[1]]
+def subiter(iter1, iter2):
+    return [iter1[0] - iter2[0], iter1[1] - iter2[1]]
+def multiter(iter1, iter2):
+    return [iter1[0] * iter2[0], iter1[1] * iter2[1]]
+def diviter(iter1, iter2):
+    return [iter1[0] / iter2[0], iter1[1] / iter2[1]]
 def hidemouse():
     pygame.mouse.set_visible(False)
 def showmouse():
@@ -102,15 +112,19 @@ class Sprite:
             self.visible = True
         else:
             self.visible = False
+        
         if self.visible:
-            screen.blit(
-                pygame.transform.rotate(
+            s = pygame.transform.rotate(
                     pygame.transform.scale(
                         self.image,  # type: ignore
                         (abs(self.scale[0] * camerazoom), abs(self.scale[1] * camerazoom))
                     ), 
                     self.rotation
-                ), 
+                )
+            if self.removecolor:
+                s.set_colorkey(self.removecolor)
+            screen.blit(
+                s,
                 (
                     (self.pos[0] - camerapos[0]) * camerazoom,
                     (self.pos[1] - camerapos[1]) * camerazoom
@@ -428,7 +442,7 @@ class StaticBody:
     def set_angle(self, angle):
         self.body.angle = math.radians(angle)
     def get_position(self):
-        return self.body.position
+        return pymunk.pygame_util.to_pygame(self.body.position, screen) # type: ignore
     def get_angle(self):
         return math.degrees(self.body.angle)
     def apply_force(self, force, point=(0,0)):
@@ -449,6 +463,24 @@ class RigidBody(StaticBody):
 class RigidCircle(StaticCircle):
     def __init__(self, pos=[0, 0], radius=50, angle=0, bodytype=pymunk.Body.DYNAMIC, color="blue", scene="init", mass=1) -> None:
         super().__init__(pos, radius, angle, bodytype, color, scene, mass)
+class Character(RigidBody):
+    def __init__(self, pos=[0, 0], size=[50, 80], angle=0, bodytype=pymunk.Body.DYNAMIC, color="blue", scene="init", mass=1) -> None:
+        super().__init__(pos, size, angle, bodytype, color, scene, mass)
+    
+    def move_left(self, impulse=50):
+        self.body.angle = 0
+        self.body.apply_impulse_at_local_point((-impulse, 0))
+
+    def move_right(self, impulse=50):
+        self.body.angle = 0
+        self.body.apply_impulse_at_local_point((impulse, 0))
+
+    def jump(self, force=400):
+        self.body.angle = 0
+        self.body.apply_impulse_at_local_point((0, -force), (0, 0))
+
+
+
 
 #   IMPORTANT
 def mainloop():
@@ -458,7 +490,8 @@ def mainloop():
     pygame.display.set_icon(window.icon)
     mousedown = False
     clock = pygame.time.Clock()
-    drawoptions = pymunk.pygame_util.DrawOptions(screen)
+    _pymunklayer = pygame.Surface(physics_size)
+    drawoptions = pymunk.pygame_util.DrawOptions(_pymunklayer)
     while running:
         if mouselocked:
             pygame.mouse.set_pos((window.size[0] / 2, window.size[1] / 2))
@@ -489,13 +522,17 @@ def mainloop():
         kes = pygame.key.get_pressed()
         connect.onkeydown(kes)
         screen.fill(window.screencolor)
+        _pymunklayer.fill(window.screencolor)
+        if physics:
+            space.step(1/window.fps)
+        if drawphysics:
+            space.debug_draw(drawoptions)
+        _pos = subiter([0,0], camerapos)
+        screen.blit(_pymunklayer, _pos)
         for item in drawqueue:
             if item.camaffect:
                 item._draw(screen)
             else:
                 item._drawab(screen)
-        if physics:
-            space.step(1/60)
-            space.debug_draw(drawoptions)
         pygame.display.flip()
         clock.tick(window.fps)
