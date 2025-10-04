@@ -10,6 +10,7 @@ pfb.physics_size = [10000,10000]
 def keydown(keys):
     baby.pos = pfb.subiter(char.get_position(), [25,40])
     baby.rotation = -char.get_angle()
+    mrow.apply_force([100,100])
     pfb.camerapos = pfb.subiter(char.get_position(), [400,300])
     if keys[pfb.keys.A]:
         char.move_left()
@@ -19,7 +20,7 @@ def keydown(keys):
 def keypressed(key):
     if key == pfb.keys.SPACE:
         char.jump(400)
-fsp = pfb.Sprite("assets/exec.png", [0,525], [10000, 50])
+fsp = pfb.Sprite("assets/exec.png", [0,525], [10000, 50], True)
 fsp.add()
 baby = pfb.Sprite("baby.jpeg", scale=[50,80])
 baby.add()
@@ -28,8 +29,9 @@ pfb.connect.onkeydown = keydown
 pfb.connect.onkeypress = keypressed
 floor = pfb.StaticBody([0, 550], [10000,50], color="red")
 floor.add()
-mrow = pfb.RigidCircle([100,100], 100)
+mrow = pfb.RigidCircle([90,200], 100)
 mrow.add()
 wall = pfb.StaticCircle([90,130], 50)
 wall.add()
+wall.add_joint(mrow)
 pfb.mainloop()

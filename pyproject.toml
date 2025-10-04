@@ -1,6 +1,6 @@
 [project]
 name = "pygameforbabies"
-version = "0.0.6"
+version = "0.0.7"
 description = "simple pygame"
 authors = [{ name="Annes", email="anneswidow@gmail.com" }]
 readme = "README.md"

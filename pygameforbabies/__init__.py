@@ -5,6 +5,10 @@ try: # stiching
     from . import window,connect,keys,log,mouses
 except:
     import window,connect,keys,log,mouses
+def _rotate(image, topleft, angle):
+    rotated_image = pygame.transform.rotate(image, angle)
+    new_rect = rotated_image.get_rect(center = image.get_rect(topleft = topleft).center)
+    return (rotated_image, new_rect)
 log.info(f"Backends: {pygame.camera.get_backends()}")
 pygame.init()
 pygame.camera.init()
@@ -114,20 +118,23 @@ class Sprite:
             self.visible = False
         
         if self.visible:
-            s = pygame.transform.rotate(
+            ss = _rotate(
                     pygame.transform.scale(
                         self.image,  # type: ignore
                         (abs(self.scale[0] * camerazoom), abs(self.scale[1] * camerazoom))
-                    ), 
+                    ),
+                    self.pos,
                     self.rotation
                 )
+            s = ss[0]
+            r = ss[1]
             if self.removecolor:
                 s.set_colorkey(self.removecolor)
             screen.blit(
                 s,
                 (
-                    (self.pos[0] - camerapos[0]) * camerazoom,
-                    (self.pos[1] - camerapos[1]) * camerazoom
+                    (r.topleft[0] - camerapos[0]) * camerazoom,
+                    (r.topleft[1] - camerapos[1]) * camerazoom
                 )
             )
     def _drawab(self, screen:pygame.Surface):
@@ -136,14 +143,25 @@ class Sprite:
         else:
             self.visible = False
         if self.visible:
-            screen.blit(
-                pygame.transform.rotate(
+            ss = _rotate(
                     pygame.transform.scale(
-                        self.image, self.scale # type: ignore
-                    ), 
+                        self.image,  # type: ignore
+                        (abs(self.scale[0] * camerazoom), abs(self.scale[1] * camerazoom))
+                    ),
+                    self.pos,
                     self.rotation
-                ), 
-                self.pos
+                )
+            s = ss[0]
+            r = ss[1]
+            if self.removecolor:
+                s.set_colorkey(self.removecolor)
+            screen.blit(
+                s,
+                #(
+                #    (self.pos[0] - camerapos[0]) * camerazoom,
+                #    (self.pos[1] - camerapos[1]) * camerazoom
+                #)
+                r
             )
 class Line:
     def __init__(self, p1=(0,0), p2=(0,20), color="red", camaffect=True, width=4,visible=True, scene="init"):
@@ -447,6 +465,20 @@ class StaticBody:
         return math.degrees(self.body.angle)
     def apply_force(self, force, point=(0,0)):
         self.body.apply_force_at_local_point(force, point)
+    def add_joint(self, other, joint_type="pivot", anchor_a=(0,0), anchor_b=(0,0)):
+        "add a joint between this and the other body, the joint types are: pivot, pin, slide, groove"
+        if joint_type == "pivot":
+            joint = pymunk.PivotJoint(self.body, other.body, anchor_a, anchor_b)
+        elif joint_type == "pin":
+            joint = pymunk.PinJoint(self.body, other.body, anchor_a, anchor_b)
+        elif joint_type == "slide":
+            joint = pymunk.SlideJoint(self.body, other.body, anchor_a, anchor_b, 0, 100)
+        elif joint_type == "groove":
+            joint = pymunk.GrooveJoint(self.body, other.body, anchor_a, anchor_b, (0,0))
+        else:
+            raise ValueError("Invalid joint type")
+        space.add(joint)
+        return joint
 class StaticCircle(StaticBody):
     def __init__(self, pos=[0,0], radius=50, angle=0, bodytype=pymunk.Body.STATIC, color="red", scene="init",mass=1) -> None:
         self.body = pymunk.Body(body_type=bodytype, mass=mass, moment=pymunk.moment_for_circle(mass, 0, radius))
