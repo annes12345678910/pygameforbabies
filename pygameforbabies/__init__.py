@@ -2,9 +2,9 @@ import pygame,pymunk,pymunk.pygame_util
 import pygame.camera
 import math
 try: # stiching
-    from . import window,connect,keys,log,mouses
+    from . import window,connect,keys,log,mouses,clipboard
 except:
-    import window,connect,keys,log,mouses
+    import window,connect,keys,log,mouses,clipboard
 def _rotate(image, topleft, angle):
     rotated_image = pygame.transform.rotate(image, angle)
     new_rect = rotated_image.get_rect(center = image.get_rect(topleft = topleft).center)
@@ -518,6 +518,7 @@ class Character(RigidBody):
 def mainloop():
     global running,screen
     screen = pygame.display.set_mode(window.size, pygame.RESIZABLE if window.resizeable else 0 or pygame.FULLSCREEN if window.fullscreen else 0)
+    clipboard._init()
     pygame.display.set_caption(window.title)
     pygame.display.set_icon(window.icon)
     mousedown = False
@@ -568,3 +569,7 @@ def mainloop():
                 item._drawab(screen)
         pygame.display.flip()
         clock.tick(window.fps)
+def test():
+    mainloop()
+if __name__ == "__main__":
+    test()
