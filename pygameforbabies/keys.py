@@ -60,3 +60,6 @@ class InputMap:
 
 def get_axis(keys, negative:InputMap, positive:InputMap):
     return (int(positive.is_down(keys)) - int(negative.is_down(keys)))
+
+def get_vector(keys, left:InputMap, right:InputMap, up:InputMap, down:InputMap):
+    return [get_axis(keys, left, right), get_axis(keys, up, down)]
