@@ -2,9 +2,9 @@ import pygame,pymunk,pymunk.pygame_util
 import pygame.camera
 import math
 try: # stiching
-    from . import window,connect,keys,log,mouses,clipboard
+    from . import window,connect,keys,log,mouses,clipboard,d3
 except:
-    import window,connect,keys,log,mouses,clipboard
+    import window,connect,keys,log,mouses,clipboard,d3
 def _rotate(image, topleft, angle):
     rotated_image = pygame.transform.rotate(image, angle)
     new_rect = rotated_image.get_rect(center = image.get_rect(topleft = topleft).center)
@@ -562,6 +562,9 @@ def mainloop():
             space.debug_draw(drawoptions)
         _pos = subiter([0,0], camerapos)
         screen.blit(_pymunklayer, _pos)
+        for item in d3.d3queue:
+            item._draw(screen, 10,10)
+            item._update()
         for item in drawqueue:
             if item.camaffect:
                 item._draw(screen)
