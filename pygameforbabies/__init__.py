@@ -517,7 +517,17 @@ class Character(RigidBody):
 #   IMPORTANT
 def mainloop():
     global running,screen
-    screen = pygame.display.set_mode(window.size, pygame.RESIZABLE if window.resizeable else 0 or pygame.FULLSCREEN if window.fullscreen else 0)
+    flags = 0
+    if window.resizeable:
+        flags |= pygame.RESIZABLE
+    if window.fullscreen:
+        flags |= pygame.FULLSCREEN
+    if window.gl:
+        flags |= pygame.OPENGL
+
+    screen = pygame.display.set_mode(window.size, flags)
+    if window.gl:
+        d3._init()
     clipboard._init()
     pygame.display.set_caption(window.title)
     pygame.display.set_icon(window.icon)
@@ -555,6 +565,10 @@ def mainloop():
         kes = pygame.key.get_pressed()
         connect.onkeydown(kes)
         screen.fill(window.screencolor)
+        if window.gl:
+            d3._clear()
+        else:
+            screen.fill(window.screencolor)
         _pymunklayer.fill(window.screencolor)
         if physics:
             space.step(1/window.fps)
@@ -562,9 +576,10 @@ def mainloop():
             space.debug_draw(drawoptions)
         _pos = subiter([0,0], camerapos)
         screen.blit(_pymunklayer, _pos)
-        for item in d3.d3queue:
-            item._draw(screen, 10,10)
-            item._update()
+        if window.gl:
+            for item in d3.d3queue:
+                item._draw()
+                item._update()
         for item in drawqueue:
             if item.camaffect:
                 item._draw(screen)

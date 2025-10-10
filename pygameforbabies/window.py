@@ -6,6 +6,7 @@ screencolor = "black"
 resizeable = False
 fullscreen = False
 fps = 60
+gl = False
 def changeicon(path):
     global icon
     icon = pygame.image.load(path)
