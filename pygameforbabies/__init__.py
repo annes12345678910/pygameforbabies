@@ -22,7 +22,7 @@ drawqueue = []
 updatequeue = []
 running = True
 scene = "init"
-camerapos = [0,0]
+camerapos = [0.0, 0.0]
 camerazoom = 1.0
 screen = None
 camallowed = True
@@ -76,7 +76,10 @@ def _loadimage(path):
     except Exception as e:
         log.error(f"Could not load {path}: {e}")
         return None
-
+def shakecamera(intensity=5):
+    global camerapos
+    camerapos[0] += (math.sin(pygame.time.get_ticks() * 0.1) * intensity)
+    camerapos[1] += (math.cos(pygame.time.get_ticks() * 0.1) * intensity)
 # im lazy
 class Sound(pygame.mixer.Sound):
     pass
@@ -514,6 +517,7 @@ class Character(RigidBody):
 
 
 
+
 #   IMPORTANT
 def mainloop():
     global running,screen
@@ -526,8 +530,6 @@ def mainloop():
         flags |= pygame.OPENGL
 
     screen = pygame.display.set_mode(window.size, flags)
-    if window.gl:
-        d3._init()
     clipboard._init()
     pygame.display.set_caption(window.title)
     pygame.display.set_icon(window.icon)
@@ -565,10 +567,6 @@ def mainloop():
         kes = pygame.key.get_pressed()
         connect.onkeydown(kes)
         screen.fill(window.screencolor)
-        if window.gl:
-            d3._clear()
-        else:
-            screen.fill(window.screencolor)
         _pymunklayer.fill(window.screencolor)
         if physics:
             space.step(1/window.fps)
@@ -576,15 +574,12 @@ def mainloop():
             space.debug_draw(drawoptions)
         _pos = subiter([0,0], camerapos)
         screen.blit(_pymunklayer, _pos)
-        if window.gl:
-            for item in d3.d3queue:
-                item._draw()
-                item._update()
         for item in drawqueue:
             if item.camaffect:
                 item._draw(screen)
             else:
                 item._drawab(screen)
+        connect.ondraw(screen)
         pygame.display.flip()
         clock.tick(window.fps)
 def test():

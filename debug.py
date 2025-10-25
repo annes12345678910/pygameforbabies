@@ -1,7 +1,7 @@
 import pygameforbabies as pfb
 pfb.window.resizeable = True
 pfb.window.title = "Debug Window"
-char = pfb.Character([100, 0])
+char = pfb.Character()
 char.add()
 char.shape.friction = 0.5  # or even 0 for very slippery movement
 lo = pfb.keys.InputMap([pfb.keys.A, pfb.keys.LEFT])
@@ -19,6 +19,7 @@ def keydown(keys):
     #print(pfb.keys.get_axis(keys, lo, lol))
 def keypressed(key):
     if key == pfb.keys.SPACE:
+        pfb.shakecamera(100)
         char.jump(400)
 fsp = pfb.Sprite("assets/exec.png", [0,525], [10000, 50], True)
 fsp.add()

@@ -3,6 +3,7 @@ def _defaultfunc(arg = None):
 
 onupdate = _defaultfunc
 oneventupdate = _defaultfunc
+ondraw = _defaultfunc
 
 onkeypress = _defaultfunc
 onkeydown = _defaultfunc
