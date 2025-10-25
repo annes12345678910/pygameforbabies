@@ -2,9 +2,9 @@ import pygame,pymunk,pymunk.pygame_util
 import pygame.camera
 import math
 try: # stiching
-    from . import window,connect,keys,log,mouses,clipboard,d3
+    from . import window,connect,keys,log,mouses,clipboard,d3,templates
 except:
-    import window,connect,keys,log,mouses,clipboard,d3
+    import window,connect,keys,log,mouses,clipboard,d3,templates
 def _rotate(image, topleft, angle):
     rotated_image = pygame.transform.rotate(image, angle)
     new_rect = rotated_image.get_rect(center = image.get_rect(topleft = topleft).center)
@@ -86,8 +86,8 @@ class Sound(pygame.mixer.Sound):
 
 # sprite
 class Sprite:
-    def __init__(self,imgpath,pos=[0,0],scale = [64,64], camaffect=True, rotation = 0,removecolor=None, scene="init"):
-        self.image = _loadimage(imgpath)
+    def __init__(self,imgpath: str | pygame.Surface,pos=[0,0],scale = [64,64], camaffect=True, rotation = 0,removecolor=None, scene="init"):
+        self.image = _loadimage(imgpath) if isinstance(imgpath, str) else imgpath
         self.children = []
         self.pos = pos
         self.scale = scale
